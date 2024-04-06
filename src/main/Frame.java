@@ -10,6 +10,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 public class Frame extends JFrame{
+    GameLogic glogic1 = new GameLogic();
     JLabel title;
     JButton login;
     JButton exit;
@@ -38,7 +39,8 @@ public class Frame extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 // TODO Auto-generated method stub
-                new Game();
+                Game.createGame();
+                dispose();
             }
             
         });
@@ -63,7 +65,10 @@ public class Frame extends JFrame{
         add(exit);
 
         load = new JButton();
-      
+        load.setBounds(220, 320, 200, 50);
+        load.setText("Load");
+        load.setFont(getFont().deriveFont(15f));
+        add(load);
 
         repaint();
     }
