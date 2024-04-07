@@ -10,11 +10,11 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 public class Frame extends JFrame{
-    GameLogic glogic1 = new GameLogic();
     JLabel title;
     JButton login;
     JButton exit;
     JButton load;
+
     Frame (){
         setVisible(true);
         setBounds(200, 50, 650, 650);

@@ -5,6 +5,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -15,7 +19,8 @@ import javax.swing.Timer;
 public class Game extends JFrame implements ActionListener{
     private static Game game;
 
-    GameLogic glogic = new GameLogic();
+    GameLogic glogic;
+    Inventory inv;
 
     Timer timer;
 
@@ -23,6 +28,7 @@ public class Game extends JFrame implements ActionListener{
     JLabel action1, action2, action3, action4, action5, action6, action7, action8;
     JLabel hplabel, balancelbl, xplbl, levellbl;
     JButton enter;
+    JButton save;
     private Game (){
         setVisible(true);
         setBounds(300, 100, 650, 650);
@@ -30,6 +36,10 @@ public class Game extends JFrame implements ActionListener{
         setLayout(null);
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        glogic = new GameLogic();
+        inv = new Inventory();
+        Player.createPlayer();
 
         timer = new Timer(25, this);
         timer.start();
@@ -56,10 +66,10 @@ public class Game extends JFrame implements ActionListener{
                     commandsfield.setText("");
 
                     glogic.check();
-                    hplabel.setText("HP: "+glogic.getPlayerHp());
-                    balancelbl.setText("$: "+glogic.getPlayerBal());
-                    xplbl.setText("XP: "+glogic.getPlayerXp());
-                    levellbl.setText("LVL: "+glogic.getPlayerLvl());
+                    hplabel.setText("HP: "+Player.getPlayer().getPlayerHp());
+                    balancelbl.setText("$: "+Player.getPlayer().getPlayerBal());
+                    xplbl.setText("XP: "+Player.getPlayer().getPlayerXp());
+                    levellbl.setText("LVL: "+Player.getPlayer().getPlayerLvl());
                  }
             }
 
@@ -73,8 +83,8 @@ public class Game extends JFrame implements ActionListener{
         add(commandsfield);
 
         enter = new JButton();
-        enter.setBounds(430, 500, 150, 70);
-        enter.setText("Enter");
+        enter.setBounds(430, 500, 70, 70);
+        enter.setText("E");
         enter.setFont(getFont().deriveFont(20f));
         enter.addActionListener(new ActionListener() {
 
@@ -88,14 +98,48 @@ public class Game extends JFrame implements ActionListener{
                 commandsfield.setText("");
 
                 glogic.check();
-                hplabel.setText("HP: "+glogic.getPlayerHp());
-                balancelbl.setText("$: "+glogic.getPlayerBal());
-                xplbl.setText("XP: "+glogic.getPlayerXp());
-                levellbl.setText("LVL: "+glogic.getPlayerLvl());
+                hplabel.setText("HP: "+Player.getPlayer().getPlayerHp());
+                balancelbl.setText("$: "+Player.getPlayer().getPlayerBal());
+                xplbl.setText("XP: "+Player.getPlayer().getPlayerXp());
+                levellbl.setText("LVL: "+Player.getPlayer().getPlayerLvl());
             }
             
         });
         add(enter);
+
+        save = new JButton();
+        save.setText("S");
+        save.setFont(getFont().deriveFont(20f));
+        save.setBounds(510, 500, 70, 70);
+        save.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // TODO Auto-generated method stub
+                File file = new File("C:/Users/Acer/Desktop/Java_Projects/Game/AttackorDie/save.txt");
+                try {
+                    file.createNewFile();
+                } catch (IOException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+                PrintWriter pW;
+                try {
+                    pW = new PrintWriter(file);
+                    pW.write(Player.getPlayer().getPlayerHp()+"\n"+Player.getPlayer().getPlayerXp()+"\n"+Player.getPlayer().getPlayerBal()+"\n"+Player.getPlayer().getPlayerLvl()+"\n"+glogic.getHealPotions()+"\n"+inv.getArmor()+"\n"+Player.getPlayer().getPlayerLvlUp());
+                    pW.flush();
+                    pW.close();
+                    glogic.setInfo("Your data has been saved");
+                    glogic.show();
+
+                } catch (FileNotFoundException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+            
+        });
+        add(save);
 
         action1 = new JLabel();
         action1.setBounds(70, 400, 650, 70);
@@ -147,28 +191,28 @@ public class Game extends JFrame implements ActionListener{
 
         hplabel = new JLabel();
         hplabel.setBounds(70, 50, 350, 70);
-        hplabel.setText("HP: "+glogic.getPlayerHp());
+        hplabel.setText("HP: "+Player.getPlayer().getPlayerHp());
         hplabel.setFont(getFont().deriveFont(35f));
         hplabel.setForeground(Color.RED);
         add(hplabel);
 
         balancelbl = new JLabel();
         balancelbl.setBounds(200, 50, 350, 70);
-        balancelbl.setText("$: "+glogic.getPlayerBal());
+        balancelbl.setText("$: "+Player.getPlayer().getPlayerBal());
         balancelbl.setFont(getFont().deriveFont(35f));
         balancelbl.setForeground(Color.GREEN);
         add(balancelbl);
 
         xplbl = new JLabel();
         xplbl.setBounds(320, 50, 350, 70);
-        xplbl.setText("XP: "+glogic.getPlayerXp());
+        xplbl.setText("XP: "+Player.getPlayer().getPlayerXp());
         xplbl.setFont(getFont().deriveFont(35f));
         xplbl.setForeground(Color.BLUE);
         add(xplbl);
 
         levellbl = new JLabel();
         levellbl.setBounds(470, 50, 350, 70);
-        levellbl.setText("LVL: "+glogic.getPlayerLvl());
+        levellbl.setText("LVL: "+Player.getPlayer().getPlayerLvl());
         levellbl.setFont(getFont().deriveFont(35f));
         levellbl.setForeground(Color.MAGENTA);
         add(levellbl);
@@ -178,6 +222,25 @@ public class Game extends JFrame implements ActionListener{
     public void actionPerformed(ActionEvent e) {
         // TODO Auto-generated method stub
         repaint();
+        if(Player.getPlayer().getPlayerLvl() >= 1){
+            Entity.EntityData.setDamage(6);
+            Entity.EntityData.setBalReward(8);
+            Entity.EntityData.setXpReward(26);
+        }
+        if(Player.getPlayer().getPlayerLvl() >= 5){
+            Entity.EntityData.setDamage(8);
+            Entity.EntityData.setBalReward(11);
+            Entity.EntityData.setXpReward(67);
+            Player.getPlayer().setPlayerMaxHp(30);
+        }
+
+        if (Player.getPlayer().checkLvlUp()){
+            glogic.setInfo("You've reached new level!");
+            glogic.show();
+        }
+
+        Player.getPlayer().setPToNewLvl((float)Player.getPlayer().getPlayerXp()/Player.getPlayer().getPlayerLvlUp()*100);
+        Game.getGame().updateInfo();
     }
 
     public static void createGame(){
@@ -187,4 +250,10 @@ public class Game extends JFrame implements ActionListener{
         return game;
     }
     
+    public void updateInfo(){
+        levellbl.setText("LVL: "+Player.getPlayer().getPlayerLvl());
+        xplbl.setText("XP: "+Player.getPlayer().getPlayerXp());
+        balancelbl.setText("$: "+Player.getPlayer().getPlayerBal());
+        hplabel.setText("HP: "+Player.getPlayer().getPlayerHp());
+    }
 }

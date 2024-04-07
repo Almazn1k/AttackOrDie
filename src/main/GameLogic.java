@@ -1,22 +1,29 @@
 package main;
 
-public class GameLogic {
-    
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.FileReader;
+
+import javax.swing.Timer;
+
+public class GameLogic{
+    Inventory inv;
+
+    Timer timer;
 
     private String info = "-";
     private String command;
 
-    private int player_hp = 20;
-    private int player_xp = 80;
-    private int player_bal = 0;
-    private int player_lvl = 0;
-    private int player_armor = 0;
+    private int heal_potion = 2;
 
-    private int heal_potion = 0;
+    private int hp_cost = 20;
+    private int armor_cost = 45;
 
-    private int lvlup = 100;
+    private float p_to_newlvl;
 
-    private int entity_damage = 4;
+    GameLogic(){
+        inv = new Inventory();
+    }
 
     public void show(){
         Game.getGame().action8.setText(Game.getGame().action7.getText());
@@ -30,36 +37,36 @@ public class GameLogic {
     }
 
     public void attack(){
-            if(player_hp > entity_damage){
-                player_hp = player_hp - entity_damage;
-                player_xp = player_xp + 20;
-                player_bal = player_bal + 5;
-                info = "Your attack was succesful!";
-                show();                
+            Entity.createEntity();
+            if(Player.getPlayer().getPlayerHp() > Entity.getEntity().getDamage()){
+                Player.getPlayer().dealDamage(Entity.getEntity().getDamage()); 
+                Player.getPlayer().setPlayerXp(Player.getPlayer().getPlayerXp() + Entity.getEntity().getXpReward());
+                Player.getPlayer().setPlayerBal(Player.getPlayer().getPlayerBal() + Entity.getEntity().getBalReward());
+                info = "Your attack was succesful!";                
             }
             else {
                 info = "Attack failed! You died";
-                player_hp = 0;
-                player_xp = 0;
-                player_lvl = 0;
-                player_bal = 0;
-                show();
+                Player.getPlayer().setPlayerHp(0);
+                Player.getPlayer().setPlayerXp(0);
+                Player.getPlayer().setPlayerLvl(0);
+                Player.getPlayer().setPlayerBal(0);
             }
+            show();
         }
 
     public void respawn(){
-        if(player_hp <= 0){
-            player_hp = 20;
-            player_xp = 0;
-            player_lvl = 0;
-            player_bal = 0;
+        if(Player.getPlayer().getPlayerHp() <= 0){
+            Player.getPlayer().setPlayerHp(20);
+            Player.getPlayer().setPlayerXp(0);
+            Player.getPlayer().setPlayerLvl(0);
+            Player.getPlayer().setPlayerBal(0);
+            heal_potion = 2;
             info = "You've been respawned";
-            show();
         }
         else {
-            info = "You can't respawn. Your hp is "+Integer.toString(player_hp);
-            show();
+            info = "You can't respawn. Your hp is "+Integer.toString(Player.getPlayer().getPlayerHp());
         }
+        show();
     }
 
     public void shop(){
@@ -67,24 +74,23 @@ public class GameLogic {
          show();
          info = "";
          show();
-         info = "1. Heal Potion - 20$";
+         info = "1. Heal Potion - "+hp_cost+"$";
          show();
-         info = "2. Armor - 45$";
+         info = "2. Armor - "+armor_cost+"$";
          show();
     }
 
     public void buy(){
         if (command.contains("hp") || command.contains("heal potion") || command.contains("healp")){
-            if(player_bal >= 20){
+            if(Player.getPlayer().getPlayerBal() >= 20){
                 heal_potion += 1;
-                player_bal -= 20;
+                Player.getPlayer().setPlayerBal(Player.getPlayer().getPlayerBal() - hp_cost);
                 info = "You successfully bought 1 Heal Potion";
-                show();
             }
             else {
                 info = "You haven't any money to buy that";
-                show();
             }
+            show();
         }
         else {
             info = "ERROR: Can't found that item";
@@ -95,24 +101,79 @@ public class GameLogic {
     public void heal(){
         if (heal_potion >= 1){
             heal_potion -= 1;
-            player_hp = 20;
-            info = "You've been healed";
-            show();
+            Player.getPlayer().setPlayerHp(Player.getPlayer().getPlayerHp() + 12);
+            if(Player.getPlayer().getPlayerHp() > Player.getPlayer().getPlayerMaxHp()){
+                Player.getPlayer().setPlayerHp(Player.getPlayer().getPlayerMaxHp());
+            }
+            info = "You've healed 12 HP";
         }
         else {
             info = "You haven't any Heal Potions";
+        }
+        show();
+    }
+
+    public void levelinfo(){
+        info = "Your level: "+Player.getPlayer().getPlayerLvl();
+        show();
+        info = "XP to new level: "+Player.getPlayer().getPlayerXp()+"/"+Player.getPlayer().getPlayerLvlUp()+" ("+Player.getPlayer().getPlayerPerToNewLvl()+"%)";
+        show();
+        System.out.println(p_to_newlvl);
+    }
+
+    public void inventory(){
+        info = "PLAYER'S INVENTORY";
+        show();
+        info = "Heal Potions: "+heal_potion;
+        show();
+        info = "Armor Level: "+inv.getArmor();
+        show();
+    }
+
+    public void load(){
+        try {
+            BufferedReader bW = new BufferedReader(new FileReader("C:/Users/Acer/Desktop/Java_Projects/Game/AttackorDie/save.txt"));
+            String line;
+            int c = 0;
+			while ((line = bW.readLine()) != null) {
+                if (c == 0){
+                    Player.getPlayer().setPlayerHp(Integer.parseInt(line));
+                }
+                if (c == 1){
+                    Player.getPlayer().setPlayerXp(Integer.parseInt(line));
+                }
+                if (c == 2){
+                    Player.getPlayer().setPlayerBal(Integer.parseInt(line));
+                }
+                if (c == 3){
+                    Player.getPlayer().setPlayerLvl(Integer.parseInt(line));
+                }
+                if (c == 4){
+                    heal_potion = Integer.parseInt(line);
+                }
+                if (c == 5){
+                    inv.setArmor(Integer.parseInt(line));
+                }
+                if (c == 6){
+                    Player.getPlayer().setPlayerLvlUp(Integer.parseInt(line));
+                }
+                c++;
+				System.out.println(line);
+			}
+            bW.close();
+            info = "Your data has been restored";
             show();
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
         }
     }
 
     public void check(){
-        if (player_xp == lvlup){
-            player_lvl += 1;
-            lvlup *= 2;
-            player_xp = 0;
+        if(command.equals("respawn") && Player.getPlayer().getPlayerHp() == 0){
+            respawn();
         }
-
-        if(player_hp != 0){
+        else if(Player.getPlayer().getPlayerHp() != 0){
             if (command.equals("attack")){
                 attack();
             }
@@ -125,39 +186,30 @@ public class GameLogic {
             else if(command.equals("heal")){
                 heal();
             }
+            else if(command.equals("respawn")){
+                respawn();
+            }
+            else if(command.equals("levelinfo") || command.equals("li")){
+                levelinfo();
+            }
+            else if(command.equals("inventory") || command.equals("inv") || command.equals("i")){
+                inventory();
+            }
+            else if(command.equals("load")){
+                load();
+            }
             else {
                 info = "Command has not found!";
                 show();
             }
-        }
+        }   
         else {
             info = "You've been killed. Please respawn";
             show();
         }
-        if(command.equals("respawn")){
-            respawn();
-        }   
+        System.out.println(Player.getPlayer().getPlayerHp());
     }
 
-    public int getPlayerHp(){
-        return player_hp;
-    }
-
-    public int getPlayerXp(){
-        return player_xp;
-    }
-
-    public int getPlayerLvl(){
-        return player_lvl;
-    }
-
-    public int getPlayerBal(){
-        return player_bal;
-    }
-
-    public int getEntityDamage(){
-        return entity_damage;
-    }
 
     public String getCommand(){
         return command;
@@ -173,5 +225,9 @@ public class GameLogic {
 
     public void setInfo(String inf1){
         info = inf1;
+    }
+
+    public int getHealPotions(){
+        return heal_potion;
     }
 }
